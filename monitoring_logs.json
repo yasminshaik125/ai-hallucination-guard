@@ -1,0 +1,74 @@
+[
+    {
+        "timestamp": "2026-02-13T12:30:45.123456",
+        "user_query": "Who is the Prime Minister of India?",
+        "risk_score": 0,
+        "risk_level": "Low",
+        "total_claims": 1,
+        "failed_claims": 0,
+        "correction_triggered": false
+    },
+    {
+        "timestamp": "2026-02-13T12:32:10.654321",
+        "user_query": "Who won Nobel Prize in Physics in 2035?",
+        "risk_score": 1,
+        "risk_level": "High",
+        "total_claims": 1,
+        "failed_claims": 1,
+        "correction_triggered": true
+    },
+    {
+        "timestamp": "2026-02-13T19:26:06.034161",
+        "user_query": "Who won the Nobel Prize in Physics in 2035?",
+        "risk_score": 1.0,
+        "risk_level": "High",
+        "total_claims": 1,
+        "failed_claims": 1,
+        "correction_triggered": true
+    },
+    {
+        "timestamp": "2026-02-13T19:30:40.833826",
+        "user_query": "Who won the Nobel Prize in Physics in 2035?",
+        "risk_score": 1.0,
+        "risk_level": "High",
+        "total_claims": 1,
+        "failed_claims": 1,
+        "correction_triggered": true
+    },
+    {
+        "timestamp": "2026-02-13T19:34:13.016149",
+        "user_query": "What is photosynthesis?",
+        "risk_score": 0.33,
+        "risk_level": "Low",
+        "total_claims": 3,
+        "failed_claims": 1,
+        "correction_triggered": false
+    },
+    {
+        "timestamp": "2026-02-13T19:38:55.119613",
+        "user_query": "What is photosynthesis?",
+        "risk_score": 0.33,
+        "risk_level": "Low",
+        "total_claims": 3,
+        "failed_claims": 1,
+        "correction_triggered": false
+    },
+    {
+        "timestamp": "2026-02-14T05:17:22.246378",
+        "user_query": "what is apple?",
+        "risk_score": 0.0,
+        "risk_level": "Low",
+        "total_claims": 3,
+        "failed_claims": 0,
+        "correction_triggered": false
+    },
+    {
+        "timestamp": "2026-02-14T05:19:31.025357",
+        "user_query": "Who won the Nobel Prize in Physics in 2035?",
+        "risk_score": 1.0,
+        "risk_level": "High",
+        "total_claims": 1,
+        "failed_claims": 1,
+        "correction_triggered": true
+    }
+]
