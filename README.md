@@ -1,322 +1,198 @@
-# 🚀 AI Hallucination Guard — Archestra Multi‑Agent System
-
-## 📌 Project Overview
-
-AI Hallucination Guard is a multi‑agent verification system built on **Archestra AI** that detects hallucinations in LLM responses. The system first generates a normal AI answer and then runs a verification agent that scores factual accuracy, risk level, and confidence.
-
-This project was built for a hackathon to demonstrate:
-
-* ✅ Multi‑agent orchestration
-* ✅ Groq LLM integration
-* ✅ Real‑time hallucination detection
-* ✅ MCP‑style tool pipeline
-* ✅ End‑to‑end local deployment
+# 🛡️ AI Hallucination Guard — Multi-Agent Verification Pipeline  
+**Hackathon Project — Built with Archestra + Groq**
 
 ---
 
-# 🎯 Problem Statement
+## 🌍 Problem Statement
 
-Large Language Models often produce confident but incorrect answers (hallucinations). Users have no built‑in way to verify factual correctness in real time.
+Large Language Models (LLMs) are powerful but often generate **hallucinated or unsupported facts**.
 
-**Goal:** Build a system that automatically verifies AI responses and flags hallucinations with measurable scores.
+Current AI systems suffer from:
 
----
+- ❌ Confident but incorrect answers  
+- ❌ No built-in verification layer  
+- ❌ Lack of trust signals  
+- ❌ Poor explainability  
+- ❌ Risk in production use  
 
-# 💡 Solution Architecture
-
-## 🔄 High‑Level Flow
-
-User → Chat Assistant → LLM Answer → Hallucination Guard → Score → Final Output
-
-### Agents Used
-
-1. **Chat් Chat Assistant (Main Agent)**
-
-   * Generates primary AI response
-   * Routes output for verification
-
-2. **🛡️ Hallucination Guard (Sub‑Agent)**
-
-   * Verifies factual accuracy
-   * Calculates confidence score
-   * Assigns risk level
-   * Flags hallucinations
+👉 Users cannot easily judge whether an AI response is trustworthy.
 
 ---
 
-# 🧰 Tech Stack
+## 💡 Solution
 
-* Archestra AI Platform
-* Groq LLM (OpenAI‑compatible endpoint)
-* Node.js
-* Docker & Docker Compose
-* PostgreSQL
-* Next.js (Archestra frontend)
-* MCP architecture
+**AI Hallucination Guard** introduces a **multi-agent verification pipeline** that automatically validates AI responses before presenting them to the user.
+
+The system performs:
+
+- Natural AI response generation  
+- Automatic claim extraction  
+- Fact verification  
+- Hallucination risk detection  
+- Confidence scoring  
+
+✨ Result: **Trustworthy, explainable AI outputs**
 
 ---
 
-# ⚙️ Local Setup Instructions
+## 🎥 Demo Video
 
-## ✅ Prerequisites (IMPORTANT)
+📺 Watch the demo here:  
+*(paste your video link here)*
 
-Install the following on your machine:
+---
 
-### 1. Install Node.js
+## 🤖 Where Archestra Is Used
 
-Download and install:
-👉 [https://nodejs.org](https://nodejs.org)
+Archestra powers the **multi-agent orchestration layer**.
 
-Verify:
+It manages:
+
+- Agent sequencing  
+- Tool orchestration  
+- Observability  
+- Execution flow  
+- Structured outputs  
+
+---
+
+### 🔹 Multi-Agent Intelligence Flow
+
+User asks:
+
+AI Answer Generation
+↓
+Claim Extractor Agent
+↓
+Fact Verification Agent
+↓
+Hallucination Assessment Agent
+↓
+Confidence Scorer Agent
+↓
+Final Trusted Response
+
+---
+
+## 🧠 System Architecture
+
+User
+↓
+Chat Assistant (Groq LLM)
+↓
+Archestra Orchestrator
+↓
+Claim Extractor Agent
+↓
+Fact Verification Agent
+↓
+Hallucination Assessment Agent
+↓
+Confidence Scorer Agent
+↓
+Final Verified Output
+
+---
+
+## 🏗 Tech Stack
+
+### 🤖 AI Layer
+- Groq LLM (Llama 3.1)  
+- Multi-Agent Reasoning  
+
+### 🧠 Orchestration Layer
+- Archestra Platform  
+- Sequential Agent Pipeline  
+
+### ⚙️ Backend / Runtime
+- Node.js  
+- pnpm  
+- Docker (PostgreSQL)  
+
+### 🎨 Interface
+- Archestra UI  
+- Local development environment  
+
+---
+
+## ✨ Key Features
+
+✔ Multi-Agent Hallucination Detection  
+✔ Automatic Claim Extraction  
+✔ Fact Verification Pipeline  
+✔ Hallucination Risk Scoring  
+✔ Confidence Score Generation  
+✔ Sequential Agent Orchestration  
+✔ Explainable AI Outputs  
+✔ Hackathon-Ready Observability  
+
+---
+
+## 🔧 Installation (Local Setup)
+
+### 1️⃣ Clone Repository
 
 ```bash
-node -v
-npm -v
-```
-
----
-
-### 2. Install pnpm
-
-```bash
-npm install -g pnpm
-```
-
-Verify:
-
-```bash
-pnpm -v
-```
-
----
-
-### 3. Install Docker Desktop
-
-Download:
-👉 [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
-
-After install:
-
-* Start Docker Desktop
-* Ensure it is running
-
-Verify:
-
-```bash
-docker --version
-docker compose version
-```
-
----
-
-### 4. Get Groq API Key
-
-Go to:
-👉 [https://console.groq.com/keys](https://console.groq.com/keys)
-
-Copy your key (starts with `gsk_...`)
-
----
-
-# 📥 Clone the Repository
-
-Your teammate should run:
-
-```bash
-git clone https://github.com/YOUR_USERNAME/ai-hallucination-guard.git
+git clone <your-repo-url>
 cd ai-hallucination-guard
-```
-
----
-
-# 🔐 Environment Setup
-
-## Step 1: Create .env file
-
-Inside:
-
-```
-archestra/platform/.env
-```
-
-Add these **critical lines at the bottom**:
-
-```env
-ARCHESTRA_QUICKSTART=false
-
-OPENAI_API_KEY=gsk_your_actual_groq_key
-OPENAI_BASE_URL=https://api.groq.com/openai/v1
-```
-
-⚠️ Replace with your real Groq key.
-
----
-
-# 🐳 Start Infrastructure
-
-From project root:
-
-```bash
-docker compose up -d
-```
-
-This starts:
-
-* PostgreSQL
-* Supporting services
-
-Wait until containers are healthy.
-
-Check:
-
-```bash
-docker ps
-```
-
----
-
-# 🧠 Start Backend
-
-```bash
-cd archestra/platform/backend
+2️⃣ Install Dependencies
 pnpm install
+
+3️⃣ Start Services
 pnpm dev
-```
-
-You should see:
-
-```
-Server listening at http://127.0.0.1:9000
-```
-
----
-
-# 🎨 Start Frontend
-
-Open new terminal:
-
-```bash
-cd archestra/platform/frontend
-pnpm install
-pnpm dev
-```
-
-Open browser:
-
-👉 [http://127.0.0.1:3000](http://127.0.0.1:3000)
-
----
-
-# 🔑 Configure LLM Key in UI
-
-Inside Archestra UI:
-
-1. Go to **Settings → LLM API Keys**
-2. Click **Add API Key**
-3. Provider: **OpenAI**
-4. Paste your Groq key
-5. Save
-6. Click **Refresh models**
-
----
-
-# 🤖 Agent Configuration (IMPORTANT)
-
-## Chat Assistant
-
-Set:
-
-* Model: Llama 3.1 8B Instant (or available Groq model)
-* API Key: My Groq Key
-
----
-
-## Hallucination Guard
-
-Set:
-
-* Model: same Groq model
-* API Key: My Groq Key
-
----
-
-## 🔗 Link Agents (CRITICAL)
-
-Go to:
-
-Agents → Chat Assistant → Edit
-
-Under **Subagents**:
-
-✅ Add Hallucination Guard
-
-This enables the multi‑agent flow.
-
----
-
-# 🧪 Test the System
-
-Open chat and try:
-
-```
-The capital of India is Mumbai
-```
-
-Expected behavior:
-
-* Chat Assistant generates answer
-* Hallucination Guard verifies
-* System shows:
-
-  * Accuracy score
-  * Risk level
-  * Confidence
-
----
-
-# 📊 Current Features
-
-* Multi‑agent orchestration
-* Groq integration
-* Real‑time verification
-* Confidence scoring
-* Risk classification
-* Local full‑stack deployment
-
----
-
-# 🚧 Known Limitations
-
-* Verification logic is prompt‑based (not retrieval grounded)
-* No external fact database yet
-* UI formatting can be improved
-* Kubernetes MCP runtime not configured (safe to ignore locally)
-
----
-
-# 🔮 Future Improvements
-
-* Add web search grounding
-* Add citation checking
-* Add multi‑tool routing
-* Add knowledge graph verification
-* Production deployment
-
----
-
-# 👩‍💻 Team Collaboration Workflow
-
-## For My Teammate
-
-After cloning, they must:
-
-1. Install prerequisites
-2. Add their own Groq key in `.env`
-3. Run docker compose
-4. Start backend
-5. Start frontend
-6. Configure API key in UI
 
 
+Ensure Docker PostgreSQL is running if configured.
 
-**You are hackathon‑ready. 🚀**
+🔐 Environment Variables
+
+Create .env file:
+
+GROQ_API_KEY=your_groq_key
+DATABASE_URL=your_postgres_url
+Hackathon Alignment
+
+This project demonstrates:
+
+✅ Multi-agent AI architecture
+
+✅ Hallucination detection pipeline
+
+✅ Archestra orchestration
+
+✅ Trustworthy AI outputs
+
+✅ Real-world AI safety solution
+
+✅ Observability-first design
+
+🚀 Future Scope
+
+Planned improvements:
+
+🔹 Real-time web verification
+
+🔹 Knowledge graph grounding
+
+🔹 Enterprise RAG integration
+
+🔹 Voice input support
+
+🔹 Advanced risk modeling
+
+🔹 UI trust badges
+
+🔹 Streaming verification
+❤️ Team Vision
+
+Our mission is to make AI systems:
+
+More trustworthy
+
+More explainable
+
+More production-ready
+
+Less hallucination-prone
+
+🚀 The future of AI must be verifiable by design.
