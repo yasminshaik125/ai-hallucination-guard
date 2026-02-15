@@ -1,0 +1,223 @@
+name: On Pull Requests
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+  # You can use the merge_group event to trigger your GitHub Actions workflow when
+  # a pull request is added to a merge queue
+  # https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue#triggering-merge-group-checks-with-github-actions
+  merge_group:
+
+concurrency:
+  # Cancel any running workflow for the same branch when new commits are pushed.
+  # We group both by ref_name (available when CI is triggered by a push to a branch/tag)
+  # and head_ref (available when CI is triggered by a PR).
+  # For merge queue, we use merge_group to ensure each merge queue run gets its own group.
+  group: "on-pull-requests-${{ github.ref_name }}-${{ github.head_ref }}-${{ github.event.merge_group.head_sha || '' }}"
+  cancel-in-progress: true
+
+jobs:
+  release-freeze-check:
+    name: Release Freeze Check
+    # Always run so it can be a required status check - passes immediately for non-release-please PRs and merge_group
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Check if this requires freeze validation
+        id: check-context
+        run: |
+          # For merge_group events, always pass
+          if [ "$EVENT_NAME" = "merge_group" ]; then
+            echo "should_check=false" >> "$GITHUB_OUTPUT"
+            echo "✅ Merge queue - passing automatically"
+            exit 0
+          fi
+
+          # For PRs, only check release-please branches
+          if [[ "$HEAD_REF" == release-please--* ]]; then
+            echo "should_check=true" >> "$GITHUB_OUTPUT"
+            echo "🔖 This is a release-please PR - checking freeze status"
+          else
+            echo "should_check=false" >> "$GITHUB_OUTPUT"
+            echo "✅ Not a release-please PR - passing automatically"
+          fi
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+
+      - name: Check if release is frozen
+        id: check-freeze
+        if: steps.check-context.outputs.should_check == 'true'
+        env:
+          RELEASE_FREEZE: ${{ vars.RELEASE_FREEZE }}
+        run: |
+          if [ "$RELEASE_FREEZE" = "true" ]; then
+            echo "frozen=true" >> "$GITHUB_OUTPUT"
+            echo "❄️ Release freeze is active"
+          else
+            echo "frozen=false" >> "$GITHUB_OUTPUT"
+            echo "✅ No release freeze active. Release-please PR can proceed."
+          fi
+
+      - name: Checkout repository
+        if: steps.check-context.outputs.should_check == 'true' && steps.check-freeze.outputs.frozen == 'true'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Request changes on PR
+        if: steps.check-context.outputs.should_check == 'true' && steps.check-freeze.outputs.frozen == 'true'
+        uses: ./.github/actions/release-freeze-review
+        with:
+          action: freeze
+          app-id: ${{ secrets.ARCHESTRA_RELEASE_FREEZE_CHECKER_GITHUB_APP_ID }}
+          private-key: ${{ secrets.ARCHESTRA_RELEASE_FREEZE_CHECKER_GITHUB_APP_PRIVATE_KEY }}
+          pr-number: ${{ github.event.pull_request.number }}
+
+      - name: Fail if frozen
+        if: steps.check-context.outputs.should_check == 'true' && steps.check-freeze.outputs.frozen == 'true'
+        run: |
+          echo "::error::❄️ Release freeze is active. Merging release-please PRs is blocked."
+          exit 1
+
+  lint-pr-title:
+    name: PR Title Linter
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Lint PR title
+        uses: grafana/shared-workflows/actions/lint-pr-title@19d8fb5687bb386849f7f53673c5f429e6387cf5 # v1.2.0
+        with:
+          config-path: "${{ github.workspace }}/.github/commitlint.config.js"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  zizmor:
+    name: Zizmor GitHub Actions static analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      # From zizmor action docs:
+      # https://github.com/zizmorcore/zizmor-action?tab=readme-ov-file#usage-with-github-advanced-security-recommended
+      #
+      # In this mode, the action will not fail when zizmor produces findings.
+      # This is because Advanced Security encourages workflows to only fail on internal errors.
+      #
+      # To use workflow failure as a blocking signal, you can use GitHub's rulesets feature.
+      # For more information, see:
+      # https://docs.github.com/en/code-security/code-scanning/managing-code-scanning-alerts/about-code-scanning-alerts#pull-request-check-failures-for-code-scanning-alerts
+      - name: Run zizmor 🌈
+        uses: zizmorcore/zizmor-action@e639db99335bc9038abc0e066dfcd72e23d26fb4 # v0.3.0
+        with:
+          config: .github/zizmor.yml
+
+  license-compliance-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: ./platform
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-env
+        with:
+          working-directory: ./platform
+
+      - name: Run license compliance check
+        run: pnpm license-check --ci
+
+      - name: Generate full license report (on failure)
+        if: failure()
+        run: |
+          echo "## License Compliance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "❌ License check failed. See details below:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          pnpm license-check 2>&1 | head -100 >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Add success summary
+        if: success()
+        run: |
+          echo "## ✅ License Compliance Check Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "No GPL/AGPL/Unknown licenses found in dependencies." >> $GITHUB_STEP_SUMMARY
+
+  platform-linting-and-tests-pr:
+    name: Platform Linting and Tests (Optional)
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: write
+      packages: write # Required for pushing platform image to GHCR (non-fork PRs only)
+      security-events: write
+      id-token: write # Required for Workload Identity Federation
+      pull-requests: write # Required for Docker Scout to write a comment to a PR
+    uses: ./.github/workflows/platform-linting-and-tests.yml
+    with:
+      # Enable auto-commit of codegen changes for release-please PRs
+      # This handles the case where release-please bumps the version in package.json,
+      # causing generated files (like docs/openapi.json) to be out of date
+      is-release-please-pr: ${{ startsWith(github.head_ref, 'release-please--') }}
+      # On pull requests we don't skip running but in GH settings those are not required to succeed to hit Merge
+      should-skip-running-and-always-succeed: false
+      # Fork PRs use GitHub artifacts instead of GHCR (no packages:write permission for forks)
+      is-fork-pr: ${{ github.event.pull_request.head.repo.fork == true }}
+    secrets:
+      TURBOREPO_REMOTE_CACHING_TOKEN: ${{ secrets.TURBOREPO_REMOTE_CACHING_TOKEN }}
+      TURBOREPO_REMOTE_CACHING_TEAM: ${{ secrets.TURBOREPO_REMOTE_CACHING_TEAM }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      # Pass GitHub App credentials for release-please PRs to enable codegen commit pushes
+      # that trigger workflow re-runs (pushes with GITHUB_TOKEN don't trigger workflows)
+      ARCHESTRA_RELEASER_GITHUB_APP_ID: ${{ secrets.ARCHESTRA_RELEASER_GITHUB_APP_ID }}
+      ARCHESTRA_RELEASER_GITHUB_APP_PRIVATE_KEY: ${{ secrets.ARCHESTRA_RELEASER_GITHUB_APP_PRIVATE_KEY }}
+
+  platform-linting-and-tests-merge-queue:
+    name: Platform Linting and Tests (Required)
+    permissions:
+      contents: write
+      packages: write # Required for pushing platform image to GHCR (non-fork PRs only)
+      security-events: write
+      id-token: write # Required for Workload Identity Federation
+      pull-requests: write # Required for Docker Scout to write a comment to a PR
+    uses: ./.github/workflows/platform-linting-and-tests.yml
+    with:
+      # On pull requests those Required Checks must still run because they are required in GH settings
+      # They should always succeed quickly in pull requests
+      # while on merge queues they should run normally and fail if needed
+      should-skip-running-and-always-succeed: ${{ github.event_name == 'pull_request' }}
+      # Fork PRs use GitHub artifacts instead of GHCR (no packages:write permission for forks)
+      # In merge_group events, github.event.pull_request is not available, so this evaluates to false
+      # (merge_group runs in base repo context with full permissions, so GHCR works)
+      is-fork-pr: ${{ github.event.pull_request.head.repo.fork == true }}
+    secrets:
+      TURBOREPO_REMOTE_CACHING_TOKEN: ${{ secrets.TURBOREPO_REMOTE_CACHING_TOKEN }}
+      TURBOREPO_REMOTE_CACHING_TEAM: ${{ secrets.TURBOREPO_REMOTE_CACHING_TEAM }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
