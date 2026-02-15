@@ -56,21 +56,22 @@ It manages:
 
 ---
 
-### 🔹 Multi-Agent Intelligence Flow
+## 🔹 Multi-Agent Intelligence Flow
 
-User asks:
-
-AI Answer Generation
-↓
-Claim Extractor Agent
-↓
-Fact Verification Agent
-↓
-Hallucination Assessment Agent
-↓
-Confidence Scorer Agent
-↓
+User asks  
+↓  
+AI Answer Generation  
+↓  
+Claim Extractor Agent  
+↓  
+Fact Verification Agent  
+↓  
+Hallucination Assessment Agent  
+↓  
+Confidence Scorer Agent  
+↓  
 Final Trusted Response
+
 
 ---
 
