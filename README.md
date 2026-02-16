@@ -38,7 +38,7 @@ The system performs:
 ## 🎥 Demo Video
 
 📺 Watch the demo here:  
-*(paste your video link here)*
+https://youtu.be/zZT1qfq-yYI?si=kaR86z6rGDbW2k4N
 
 ---
 
